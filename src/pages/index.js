@@ -1,31 +1,24 @@
 import '../scss/style.scss'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, {useCallback, useMemo, useState} from 'react'
 import isHotkey from 'is-hotkey'
-import { Editable, withReact, useSlate, Slate } from 'slate-react'
+import {Editable, Slate, useSlate, withReact} from 'slate-react'
 
-import {
-  Editor,
-  Transforms,
-  createEditor,
-  Descendant,
-  Element as SlateElement,
-} from 'slate'
+import {FaBold, FaCode, FaItalic, FaListOl, FaListUl, FaUnderline} from 'react-icons/fa';
+import {MdFormatQuote, MdLooksOne, MdLooksTwo} from "react-icons/md";
 
-import { withHistory } from 'slate-history'
 
-// import { Button, Icon, Toolbar } from '../components'
+import {createEditor, Editor, Element as SlateElement, Transforms,} from 'slate'
 
-const Button = ({children}) => {
-  return <span>{children}</span>
+import {withHistory} from 'slate-history'
+
+const CustomButton = ({active, children}) => {
+  return <button className={active === true ? 'active': ''}>{children}</button>
 }
-const Icon = ({children}) => {
-  return <button>{children}</button>
-}
+
 
 const Toolbar = ({children}) => {
-  return <button>{children}</button>
+  return <div style={{display: 'flex' }}>{children}</div>
 }
-
 
 
 const HOTKEYS = {
@@ -45,15 +38,6 @@ const pageStyles = {
 
 
 const IndexPage = () => {
-  // const editor = useMemo(() => withReact(createEditor()), [])
-  // const [value, setValue] = useState([
-  //   {
-  //     type: 'paragraph',
-  //     children: [{ text: 'A line of text in a paragraph.' }],
-  //   },
-  // ]);
-
-
   const initialValue = [
     {
       type: 'paragraph',
@@ -117,30 +101,39 @@ const IndexPage = () => {
   const BlockButton = ({ format, icon }) => {
     const editor = useSlate()
     return (
-        <Button
+        <CustomButton
             active={isBlockActive(editor, format)}
             onMouseDown={event => {
               event.preventDefault()
               toggleBlock(editor, format)
             }}
         >
-          <Icon>{icon}</Icon>
-        </Button>
+          { icon ===  'looks_one' ? <MdLooksOne></MdLooksOne> :
+              icon===  'looks_two' ? <MdLooksTwo></MdLooksTwo> :
+                  icon===  'format_quote' ? <MdFormatQuote></MdFormatQuote>:
+                      icon === 'format_list_numbered' ? <FaListOl></FaListOl> :
+            icon === 'format_list_bulleted' ? <FaListUl></FaListUl> : ''
+          }
+        </CustomButton>
     )
   }
 
   const MarkButton = ({ format, icon }) => {
     const editor = useSlate()
     return (
-        <Button
+        <CustomButton
             active={isMarkActive(editor, format)}
             onMouseDown={event => {
               event.preventDefault()
               toggleMark(editor, format)
             }}
         >
-          <Icon>{icon}</Icon>
-        </Button>
+          {icon === 'format_bold'
+              ? <FaBold></FaBold> : icon=== 'format_italic'
+                  ? <FaItalic></FaItalic> : icon=== 'format_underlined'
+                  ? <FaUnderline></FaUnderline>: icon ==='code'
+                  ? <FaCode></FaCode> : ''}
+        </CustomButton>
     )
   }
 
@@ -193,8 +186,6 @@ const IndexPage = () => {
     return !!match
   }
 
-
-
   const toggleBlock = (editor, format) => {
     const isActive = isBlockActive(editor, format)
     const isList = LIST_TYPES.includes(format)
@@ -227,17 +218,18 @@ const IndexPage = () => {
           onChange={newValue => setValue(newValue)}
       >
 
-        <div style={{display : "flex"}}>
-          <MarkButton format="bold" icon="format_bold" />
-          <MarkButton format="italic" icon="format_italic" />
-          <MarkButton format="underline" icon="format_underlined" />
-          <MarkButton format="code" icon="code" />
-          <BlockButton format="heading-one" icon="looks_one" />
-          <BlockButton format="heading-two" icon="looks_two" />
-          <BlockButton format="block-quote" icon="format_quote" />
-          <BlockButton format="numbered-list" icon="format_list_numbered" />
-          <BlockButton format="bulleted-list" icon="format_list_bulleted" />
-        </div>
+
+        <Toolbar>
+          <MarkButton format="bold" icon="format_bold"/>
+          <MarkButton format="italic" icon="format_italic"/>
+          <MarkButton format="underline" icon="format_underlined"/>
+          <MarkButton format="code" icon="code"/>
+          <BlockButton format="heading-one" icon="looks_one"/>
+          <BlockButton format="heading-two" icon="looks_two"/>
+          <BlockButton format="block-quote" icon="format_quote"/>
+          <BlockButton format="numbered-list" icon="format_list_numbered"/>
+          <BlockButton format="bulleted-list" icon="format_list_bulleted"/>
+        </Toolbar>
 
 
         <Editable
