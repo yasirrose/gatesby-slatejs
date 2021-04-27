@@ -12,7 +12,6 @@ export const Button = React.forwardRef(
         },
         ref
     ) => (
-
         <span
             {...props}
             ref={ref}
