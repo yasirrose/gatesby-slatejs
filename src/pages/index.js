@@ -1,4 +1,3 @@
-import '../scss/style.scss'
 import React, {useCallback, useMemo, useState} from 'react'
 import isHotkey from 'is-hotkey'
 import {Editable, Slate, useSlate, withReact} from 'slate-react'
@@ -9,16 +8,17 @@ import {withHistory} from 'slate-history'
 
 // import { inject } from "slate-react-dnd-plugin";
 
+import { DragDropContext } from 'react-beautiful-dnd';
 
 
 
-const blockStyle = {
-    border: '1px dashed gray',
-    padding: '0.5rem 1rem',
-    marginBottom: '.5rem',
-    backgroundColor: 'white',
-    cursor: 'move'
-};
+// const blockStyle = {
+//     border: '1px dashed gray',
+//     padding: '0.5rem 1rem',
+//     marginBottom: '.5rem',
+//     backgroundColor: 'white',
+//     cursor: 'move'
+// };
 
 
 // const plugins = inject([
@@ -49,7 +49,7 @@ const blockStyle = {
 
 
 const CustomButton = ({active, children, ...props}) => {
-    return <button {...props} className={active === true ? 'btn-active' : ''}>{children}</button>
+    return <button {...props} style={{ backgroundColor: active === true ? '#fff' : '#eee',marginBottom: "5px", marginRight: "5px" }}>{children}</button>
 }
 
 const Toolbar = ({children}) => {
@@ -72,6 +72,13 @@ const pageStyles = {
     fontFamily: "-apple-system, Roboto, sans-serif, serif",
     display: "flex",
     justifyContent: "space-between"
+}
+
+const EditorStyles = {
+    border: "1px solid #ccc",
+    borderRadius:"2px",
+    minHeight: "200px",
+    padding: "8px"
 }
 
 const IndexPage = () => {
@@ -124,9 +131,7 @@ const IndexPage = () => {
     }
 
     const toggleMark = (editor, format) => {
-        console.log(editor, format);
         const isActive = isMarkActive(editor, format)
-
         if (isActive) {
             Editor.removeMark(editor, format)
         } else {
@@ -267,7 +272,7 @@ const IndexPage = () => {
                         <BlockButton format="bulleted-list" icon="format_list_bulleted"/>
                     </Toolbar>
                     <Editable
-                        className="Editor"
+                        style={EditorStyles}
                         renderElement={renderElement}
                         renderLeaf={renderLeaf}
                         placeholder="Enter some rich text…"
