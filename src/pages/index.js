@@ -282,7 +282,7 @@ const IndexPage = () => {
         }
     };
 
-    
+
     return (
         <div className="wrapper" style={pageStyles}>
             <DragDropContext onDragEnd={onDragEnd}>
