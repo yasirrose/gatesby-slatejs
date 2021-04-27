@@ -3,46 +3,33 @@ import isHotkey from 'is-hotkey'
 import {Editable, Slate, useSlate, withReact} from 'slate-react'
 import {FaBold, FaCode, FaItalic, FaListOl, FaListUl, FaUnderline} from 'react-icons/fa';
 import {MdFormatQuote, MdLooksOne, MdLooksTwo} from "react-icons/md";
-import {createEditor, Editor, Element as SlateElement, Transforms,} from 'slate'
+import {createEditor, Editor, Element as SlateElement, Path, Range, Transforms,} from 'slate'
 import {withHistory} from 'slate-history'
 
+
 // import { inject } from "slate-react-dnd-plugin";
-
-import { DragDropContext } from 'react-beautiful-dnd';
-
-
-
-// const blockStyle = {
-//     border: '1px dashed gray',
-//     padding: '0.5rem 1rem',
-//     marginBottom: '.5rem',
-//     backgroundColor: 'white',
-//     cursor: 'move'
-// };
+// import { DragPreviewBlock } from "slate-react-dnd-plugin";
+// import { DragDropContainer } from "slate-react-dnd-plugin";
+// import { DropBlock } from "slate-react-dnd-plugin";
+import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
 
 
-// const plugins = inject([
-//     {
-//         renderNode: (props) => {
-//             switch (props.node.type) {
-//                 case 'paragraph':
-//                     return <ParagraphNode {...props} />;
-//                 default:
-//                     return null;
-//             }
-//         }
-//     }
-// ],{
-//     renderBlock: (isDragging,children) => {
-//
-//         const opacity = isDragging? 0 : 1;
-//
-//         return <div style={{
-//             ...blockStyle,
-//             opacity
-//         }}>{children}</div>
-//     }
-// });
+const grid = 8;
+
+const getItemStyle = (isDragging, draggableStyle) => ({
+    userSelect: 'none',
+    padding: grid * 2,
+    margin: `0 0 ${grid}px 0`,
+    background: isDragging ? 'lightgreen' : 'grey',
+    ...draggableStyle
+});
+
+const getListStyle = (isDraggingOver) => ({
+    background: isDraggingOver ? 'lightblue' : 'lightgrey',
+    padding: grid,
+    width: 250
+});
+//end
 
 
 
@@ -62,10 +49,7 @@ const HOTKEYS = {
     'mod+u': 'underline',
     'mod+`': 'code',
 }
-
 const LIST_TYPES = ['numbered-list', 'bulleted-list']
-
-
 const pageStyles = {
     color: "#232129",
     padding: 96,
@@ -192,6 +176,8 @@ const IndexPage = () => {
                 return <li {...attributes}>{children}</li>
             case 'numbered-list':
                 return <ol {...attributes}>{children}</ol>
+            case 'inline':
+                return <span {...attributes}>{children}</span>
             default:
                 return <p {...attributes}>{children}</p>
         }
@@ -248,51 +234,152 @@ const IndexPage = () => {
         }
     }
 
+    const initialItems = [
+        {id: `item1`, content: '<div>1</div>'},
+        {id: `item2`, content: '<article>2</article>'},
+        {id: `item3`, content: '<section>3</section>'},
+        {id: `item4`, content: '<footer>4</footer>'},
+        {id: `item5`, content: '<header>5</header>'},
+    ];
+    const [data, setData] = useState({items: initialItems});
+
+    const id2List = {
+        droppable: 'items'
+    };
+
+    const onDragEnd = (result) => {
+        const { selection } = editor;
+        const { source, destination } = result;
+        if (!destination) {
+            return;
+        }
+        let item = data.items.filter(i => {
+            return i.id === result.draggableId;
+        })[0];
+        if (destination.droppableId === "droppable2") {
+            if (!!selection) {
+
+                const [parentNode, parentPath] = Editor.parent(
+                    editor,
+                    selection.focus?.path
+                );
+
+                if (editor.isVoid(parentNode)) {
+                    Transforms.insertNodes(editor, { type: 'inline', children: [{text: item.content}]}, {
+                        at: Path.next(parentPath),
+                        select: true
+                    });
+                } else if (Range.isCollapsed(selection)) {
+                    Transforms.insertNodes(editor, { type: 'inline', children: [{text: item.content}]}, { select: true });
+                } else {
+                    Transforms.wrapNodes(editor, { type: 'inline', children: [{text: item.content}]}, { split: true });
+                    Transforms.collapse(editor, { edge: "end" });
+                }
+            }
+            else {
+                Transforms.insertNodes(editor, { type: 'inline', children: [{text: item.content}]});
+            }
+        }
+    };
+
+    
     return (
         <div className="wrapper" style={pageStyles}>
-            <main className="richtext-editor" style={{width: '70%'}}>
-                <h1>Editor</h1>
-                <Slate
-                    editor={editor}
-                    value={value}
-                    onChange={newValue => {
-                        console.log(newValue)
-                        setValue(newValue)
-                    }}
-                >
-                    <Toolbar>
-                        <MarkButton format="bold" icon="format_bold"/>
-                        <MarkButton format="italic" icon="format_italic"/>
-                        <MarkButton format="underline" icon="format_underlined"/>
-                        <MarkButton format="code" icon="code"/>
-                        <BlockButton format="heading-one" icon="looks_one"/>
-                        <BlockButton format="heading-two" icon="looks_two"/>
-                        <BlockButton format="block-quote" icon="format_quote"/>
-                        <BlockButton format="numbered-list" icon="format_list_numbered"/>
-                        <BlockButton format="bulleted-list" icon="format_list_bulleted"/>
-                    </Toolbar>
-                    <Editable
-                        style={EditorStyles}
-                        renderElement={renderElement}
-                        renderLeaf={renderLeaf}
-                        placeholder="Enter some rich text…"
-                        onKeyDown={event => {
-                            for (const hotkey in HOTKEYS) {
-                                if (isHotkey(hotkey, event)) {
-                                    event.preventDefault()
-                                    const mark = HOTKEYS[hotkey]
-                                    toggleMark(editor, mark)
-                                }
-                            }
+            <DragDropContext onDragEnd={onDragEnd}>
+                <main className="richtext-editor" style={{width: '70%'}}>
+                    <h1>Editor</h1>
+                    <Droppable droppableId="droppable2">
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                >
+                    <Slate
+                        editor={editor}
+                        value={value}
+                        onChange={newValue => {
+                            console.log(newValue)
+                            setValue(newValue)
                         }}
-                    />
-                </Slate>
-            </main>
-            <aside className="richtext-drag-and-drop-container" style={{width: '20%'}}>
-                <h1>Here</h1>
-            </aside>
+                    >
+                        <Toolbar>
+                            <MarkButton format="bold" icon="format_bold"/>
+                            <MarkButton format="italic" icon="format_italic"/>
+                            <MarkButton format="underline" icon="format_underlined"/>
+                            <MarkButton format="code" icon="code"/>
+                            <BlockButton format="heading-one" icon="looks_one"/>
+                            <BlockButton format="heading-two" icon="looks_two"/>
+                            <BlockButton format="block-quote" icon="format_quote"/>
+                            <BlockButton format="numbered-list" icon="format_list_numbered"/>
+                            <BlockButton format="bulleted-list" icon="format_list_bulleted"/>
+                        </Toolbar>
+                        <Editable
+                            style={EditorStyles}
+                            renderElement={renderElement}
+                            renderLeaf={renderLeaf}
+                            placeholder="Enter some rich text…"
+                            onKeyDown={event => {
+                                for (const hotkey in HOTKEYS) {
+                                    if (isHotkey(hotkey, event)) {
+                                        event.preventDefault()
+                                        const mark = HOTKEYS[hotkey]
+                                        toggleMark(editor, mark)
+                                    }
+                                }
+                            }}
+
+                        />
+                    </Slate>
+                            </div>
+                        )}
+                    </Droppable>
+                </main>
+
+
+                <aside className="richtext-drag-and-drop-container" style={{width: '20%'}}>
+                    <h1>Snippets</h1>
+
+                    <Droppable droppableId="droppable">
+                        {(provided, snapshot) => (
+                            <div
+                                ref={provided.innerRef}
+                                style={getListStyle(snapshot.isDraggingOver)}>
+
+
+                                {data.items.map((item, index) => (
+                                    <Draggable
+                                        key={item.id}
+                                        draggableId={item.id}
+                                        index={index}>
+                                        {(provided, snapshot) => (
+                                            <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                style={getItemStyle(
+                                                    snapshot.isDragging,
+                                                    provided.draggableProps.style
+                                                )}>
+                                                {item.content}
+                                            </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+
+
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+
+
+
+                </aside>
+            </DragDropContext>
         </div>
     )
 }
+
+
+
 
 export default IndexPage
