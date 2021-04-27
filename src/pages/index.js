@@ -6,16 +6,10 @@ import {MdFormatQuote, MdLooksOne, MdLooksTwo} from "react-icons/md";
 import {createEditor, Editor, Element as SlateElement, Path, Range, Transforms,} from 'slate'
 import {withHistory} from 'slate-history'
 
-
-// import { inject } from "slate-react-dnd-plugin";
-// import { DragPreviewBlock } from "slate-react-dnd-plugin";
-// import { DragDropContainer } from "slate-react-dnd-plugin";
-// import { DropBlock } from "slate-react-dnd-plugin";
 import {DragDropContext, Draggable, Droppable} from 'react-beautiful-dnd';
 
 
 const grid = 8;
-
 const getItemStyle = (isDragging, draggableStyle) => ({
     userSelect: 'none',
     padding: grid * 2,
@@ -32,11 +26,12 @@ const getListStyle = (isDraggingOver) => ({
 //end
 
 
-
-
-
 const CustomButton = ({active, children, ...props}) => {
-    return <button {...props} style={{ backgroundColor: active === true ? '#fff' : '#eee',marginBottom: "5px", marginRight: "5px" }}>{children}</button>
+    return <button {...props} style={{
+        backgroundColor: active === true ? '#fff' : '#eee',
+        marginBottom: "5px",
+        marginRight: "5px"
+    }}>{children}</button>
 }
 
 const Toolbar = ({children}) => {
@@ -60,7 +55,7 @@ const pageStyles = {
 
 const EditorStyles = {
     border: "1px solid #ccc",
-    borderRadius:"2px",
+    borderRadius: "2px",
     minHeight: "200px",
     padding: "8px"
 }
@@ -248,8 +243,8 @@ const IndexPage = () => {
     };
 
     const onDragEnd = (result) => {
-        const { selection } = editor;
-        const { source, destination } = result;
+        const {selection} = editor;
+        const {source, destination} = result;
         if (!destination) {
             return;
         }
@@ -265,19 +260,18 @@ const IndexPage = () => {
                 );
 
                 if (editor.isVoid(parentNode)) {
-                    Transforms.insertNodes(editor, { type: 'inline', children: [{text: item.content}]}, {
+                    Transforms.insertNodes(editor, {type: 'inline', children: [{text: item.content}]}, {
                         at: Path.next(parentPath),
                         select: true
                     });
                 } else if (Range.isCollapsed(selection)) {
-                    Transforms.insertNodes(editor, { type: 'inline', children: [{text: item.content}]}, { select: true });
+                    Transforms.insertNodes(editor, {type: 'inline', children: [{text: item.content}]}, {select: true});
                 } else {
-                    Transforms.wrapNodes(editor, { type: 'inline', children: [{text: item.content}]}, { split: true });
-                    Transforms.collapse(editor, { edge: "end" });
+                    Transforms.wrapNodes(editor, {type: 'inline', children: [{text: item.content}]}, {split: true});
+                    Transforms.collapse(editor, {edge: "end"});
                 }
-            }
-            else {
-                Transforms.insertNodes(editor, { type: 'inline', children: [{text: item.content}]});
+            } else {
+                Transforms.insertNodes(editor, {type: 'inline', children: [{text: item.content}]});
             }
         }
     };
@@ -292,43 +286,43 @@ const IndexPage = () => {
                         {(provided, snapshot) => (
                             <div
                                 ref={provided.innerRef}
+                            >
+                                <Slate
+                                    editor={editor}
+                                    value={value}
+                                    onChange={newValue => {
+                                        console.log(newValue)
+                                        setValue(newValue)
+                                    }}
                                 >
-                    <Slate
-                        editor={editor}
-                        value={value}
-                        onChange={newValue => {
-                            console.log(newValue)
-                            setValue(newValue)
-                        }}
-                    >
-                        <Toolbar>
-                            <MarkButton format="bold" icon="format_bold"/>
-                            <MarkButton format="italic" icon="format_italic"/>
-                            <MarkButton format="underline" icon="format_underlined"/>
-                            <MarkButton format="code" icon="code"/>
-                            <BlockButton format="heading-one" icon="looks_one"/>
-                            <BlockButton format="heading-two" icon="looks_two"/>
-                            <BlockButton format="block-quote" icon="format_quote"/>
-                            <BlockButton format="numbered-list" icon="format_list_numbered"/>
-                            <BlockButton format="bulleted-list" icon="format_list_bulleted"/>
-                        </Toolbar>
-                        <Editable
-                            style={EditorStyles}
-                            renderElement={renderElement}
-                            renderLeaf={renderLeaf}
-                            placeholder="Enter some rich text…"
-                            onKeyDown={event => {
-                                for (const hotkey in HOTKEYS) {
-                                    if (isHotkey(hotkey, event)) {
-                                        event.preventDefault()
-                                        const mark = HOTKEYS[hotkey]
-                                        toggleMark(editor, mark)
-                                    }
-                                }
-                            }}
+                                    <Toolbar>
+                                        <MarkButton format="bold" icon="format_bold"/>
+                                        <MarkButton format="italic" icon="format_italic"/>
+                                        <MarkButton format="underline" icon="format_underlined"/>
+                                        <MarkButton format="code" icon="code"/>
+                                        <BlockButton format="heading-one" icon="looks_one"/>
+                                        <BlockButton format="heading-two" icon="looks_two"/>
+                                        <BlockButton format="block-quote" icon="format_quote"/>
+                                        <BlockButton format="numbered-list" icon="format_list_numbered"/>
+                                        <BlockButton format="bulleted-list" icon="format_list_bulleted"/>
+                                    </Toolbar>
+                                    <Editable
+                                        style={EditorStyles}
+                                        renderElement={renderElement}
+                                        renderLeaf={renderLeaf}
+                                        placeholder="Enter some rich text…"
+                                        onKeyDown={event => {
+                                            for (const hotkey in HOTKEYS) {
+                                                if (isHotkey(hotkey, event)) {
+                                                    event.preventDefault()
+                                                    const mark = HOTKEYS[hotkey]
+                                                    toggleMark(editor, mark)
+                                                }
+                                            }
+                                        }}
 
-                        />
-                    </Slate>
+                                    />
+                                </Slate>
                             </div>
                         )}
                     </Droppable>
@@ -372,14 +366,11 @@ const IndexPage = () => {
                     </Droppable>
 
 
-
                 </aside>
             </DragDropContext>
         </div>
     )
 }
-
-
 
 
 export default IndexPage

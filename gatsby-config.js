@@ -1,6 +1,6 @@
 module.exports = {
   siteMetadata: {
-    title: "My Gatsby Site",
+    title: "Gatsby SlateJs",
   },
   plugins: ["gatsby-plugin-sass"],
 };
